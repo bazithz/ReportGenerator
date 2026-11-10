@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Department Sales Dashboard</title>
+<style>
+:root{
+  --bg:#eef6fb;--card:#fff;--text:#0b2239;--muted:#587791;--line:#d6e6f1;
+  --pri:#0284c7;--pri2:#7dd3fc;--good:#0d9488;--warn:#d97706;--bad:#e11d48;
+  --shadow:0 1px 3px rgba(3,50,90,.09),0 6px 18px rgba(3,50,90,.07);
+  --r:14px;--nav-h:64px;
+}
+:root[data-theme=dark] nav.tabs button.active,:root[data-theme=dark] .btn.pri{color:#03203a}
+:root[data-theme=dark]{
+  --bg:#04131f;--card:#0a2236;--text:#e3f1fa;--muted:#86a9c2;--line:#153853;
+  --pri:#38bdf8;--pri2:#0369a1;--shadow:0 1px 3px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box;margin:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.45;font-size:15px;min-height:100vh}
+button,select,input,textarea{font:inherit;color:inherit}
+.hide{display:none!important}
+header{background:linear-gradient(135deg,#03253f 0%,#0369a1 55%,#06b6d4 100%);color:#fff;padding:18px 16px 22px;padding-top:max(18px,env(safe-area-inset-top))}
+.wrap{max-width:1200px;margin:0 auto;padding:0 16px}
+header .wrap{padding:0;display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+header h1{font-size:1.3rem;font-weight:700}
+header p{opacity:.85;font-size:.85rem;margin-top:2px}
+.icon-btn{min-width:44px;min-height:44px;border-radius:12px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;cursor:pointer;font-size:1.1rem}
+nav.tabs{display:flex;gap:6px;margin:-14px auto 16px;max-width:1200px;padding:0 16px}
+nav.tabs button{flex:0 0 auto;min-height:44px;padding:0 18px;border-radius:999px;border:1px solid var(--line);background:var(--card);cursor:pointer;font-weight:600;box-shadow:var(--shadow)}
+nav.tabs button.active{background:var(--pri);color:#fff;border-color:var(--pri)}
+main{padding-bottom:40px}
+section.view{display:none}
+section.view.active{display:block}
+.grid{display:grid;gap:12px}
+.kpis{grid-template-columns:repeat(3,1fr);margin-bottom:16px}
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:16px}
+.kpi .label{color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.04em}
+.kpi .val{font-size:1.45rem;font-weight:700;margin-top:4px;word-break:break-word}
+.kpi .sub{font-size:.78rem;color:var(--muted);margin-top:2px}
+.banner{background:linear-gradient(120deg,#03253f 0%,#0369a1 55%,#06b6d4 100%);color:#fff;border-radius:var(--r);padding:16px;text-align:center;font-weight:800;font-size:1.2rem;letter-spacing:.02em;margin-bottom:16px;box-shadow:0 4px 16px rgba(3,105,161,.3);border:1px solid rgba(125,211,252,.35)}
+:root[data-theme=dark] .banner{background:linear-gradient(120deg,#062a45 0%,#0369a1 60%,#0891b2 100%);border-color:rgba(125,211,252,.25)}
+.two{grid-template-columns:2fr 1fr;margin-bottom:16px;align-items:stretch}
+.two>.card{display:flex;flex-direction:column}
+.two>.card .donut-wrap{flex:1;justify-content:center}
+.two>.card .donut-wrap svg{width:min(220px,100%);height:auto;aspect-ratio:1}
+.card h2{font-size:1rem;margin-bottom:12px}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;align-items:center}
+.toolbar>*{min-height:44px}
+select,input[type=search],input[type=text],input[type=date],input[type=password]{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:0 12px;min-height:44px;width:100%}
+input[type=search]{flex:1 1 180px;min-width:0;width:auto}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:0 14px;cursor:pointer;font-weight:600;min-height:44px}
+.btn:active{transform:scale(.97)}
+.btn.pri{background:var(--pri);color:#fff;border-color:var(--pri)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.seg{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:4px;padding:4px;border-radius:14px;background:var(--bg);border:1px solid var(--line)}
+.seg button{min-height:44px;padding:0 10px;border-radius:10px;border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:.86rem;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;transition:background .2s,color .2s,box-shadow .2s}
+.seg button .ic{font-size:.95rem;opacity:.85}
+.seg button:hover{color:var(--text);background:rgba(2,132,199,.08)}
+.seg button.on{background:linear-gradient(135deg,#0ea5e9,#0369a1);color:#fff;box-shadow:0 2px 8px rgba(3,105,161,.35)}
+.seg button:focus-visible{outline:2px solid var(--pri);outline-offset:2px}
+.bar-row{display:grid;grid-template-columns:130px 1fr 78px;gap:8px;align-items:center;padding:6px 0;cursor:pointer;border-radius:8px}
+.bar-row:hover,.bar-row.sel{background:rgba(2,132,199,.10)}
+.bar-row .n{font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-row .t{height:14px;background:var(--line);border-radius:7px;overflow:hidden}
+.bar-row .f{height:100%;background:linear-gradient(90deg,var(--pri2),var(--pri));border-radius:7px;transition:width .5s}
+.bar-row .v{font-size:.82rem;text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.donut-wrap{display:flex;flex-direction:column;align-items:center;gap:12px}
+.donut-wrap svg{width:190px;height:190px;max-width:100%}
+.legend{width:100%;display:grid;gap:6px;font-size:.82rem}
+.legend div{display:flex;align-items:center;gap:8px}
+.legend i{width:12px;height:12px;border-radius:4px;flex:none}
+.legend span:last-child{margin-left:auto;font-weight:600}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{padding:10px 10px;text-align:right;border-bottom:1px solid var(--line);font-size:.88rem}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--muted);font-weight:600;font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;user-select:none;white-space:nowrap;position:sticky;top:0;background:var(--card)}
+th.sorted::after{content:" ▲"}th.sorted.desc::after{content:" ▼"}
+tbody tr:hover{background:rgba(2,132,199,.07)}
+tfoot td{font-weight:700;border-top:2px solid var(--line);border-bottom:0}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.75rem;font-weight:600}
+.pill.g{background:rgba(22,163,74,.15);color:var(--good)}
+.pill.w{background:rgba(217,119,6,.15);color:var(--warn)}
+.pill.b{background:rgba(220,38,38,.15);color:var(--bad)}
+.detail{margin-top:12px;padding:12px;border:1px dashed var(--line);border-radius:12px;font-size:.88rem;display:none}
+.detail.show{display:block}
+.detail b{font-weight:700}
+.note{color:var(--muted);font-size:.78rem;margin-top:10px}
+.empty{text-align:center;color:var(--muted);padding:24px}
+.hbtns{display:flex;gap:8px}
+.pdf-btn{padding:0 14px;font-size:.9rem;font-weight:700;background:rgba(255,255,255,.2)}
+.pdf-btn:hover{background:rgba(255,255,255,.32)}
+.print-meta{display:none}
+@media print{
+  @page{size:A4;margin:12mm}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  html,body{background:#e3eff8!important;color:#0b2239!important;padding:0!important;font-size:12px}
+  nav.tabs,.toolbar,.seg,.detail,.hbtns,.btn,#uploader,#modal{display:none!important}
+  header{padding:12px 16px;border-radius:8px}
+  .print-meta{display:block;color:#3f607c;font-size:11px;margin:6px 0 10px}
+  main{padding-bottom:0;margin-top:0}
+  section.view{display:block!important;margin-bottom:14px}
+  section.view.hide{display:none!important}
+  .card{box-shadow:0 1px 3px rgba(3,50,90,.12)!important;border:1px solid #bcd3e6;break-inside:avoid;background:#fff!important}
+  #depts .card{break-inside:auto}
+  .two{grid-template-columns:3fr 2fr!important}
+  .kpis{grid-template-columns:repeat(3,1fr)!important}
+  .tablewrap{max-height:none!important;overflow:visible!important}
+  table.resp{display:table!important;width:100%!important}
+  table.resp thead{display:table-header-group!important}
+  table.resp tbody{display:table-row-group!important}
+  table.resp tfoot{display:table-footer-group!important}
+  table.resp tr{display:table-row!important;background:none!important;border:0!important;border-radius:0!important;padding:0!important;margin:0!important;break-inside:avoid}
+  table.resp th,table.resp td{display:table-cell!important;padding:5px 6px!important;border-bottom:1px solid #d6e6f1!important;font-size:11px!important;font-weight:inherit;text-align:right}
+  table.resp td:first-child,table.resp th:first-child{text-align:left}
+  table.resp tfoot td{font-weight:700;border-top:2px solid #0369a1!important}
+  table.resp td::before{content:none!important}
+  th{position:static!important;color:#587791!important;background:#fff!important}
+  th::after{content:""!important}
+  .bar-row{break-inside:avoid;padding:3px 0}
+}
+.hero{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:12px}
+.hero .hcard{grid-column:span 2}
+.hero .hcard.h2,.hero .hcard.h3{grid-column:span 3}
+.hcard{border-radius:var(--r);padding:20px 18px;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:2px;box-shadow:0 6px 18px rgba(3,50,90,.22);position:relative;overflow:hidden}
+.hcard::after{content:"";position:absolute;right:-30px;top:-30px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.14)}
+.hcard .hl{position:relative;z-index:1;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;opacity:.9}
+.hcard b{font-size:2.3rem;line-height:1.15;font-weight:800;font-variant-numeric:tabular-nums}
+.hcard .hs{font-size:.82rem;opacity:.9}
+.hcard.h1{background:linear-gradient(135deg,#0369a1,#06b6d4)}
+.hcard.h2{background:linear-gradient(135deg,#0f766e,#2dd4bf)}
+.hcard.h3{background:linear-gradient(135deg,#b45309,#f59e0b)}
+.hcard.hq{background:linear-gradient(135deg,#4338ca,#818cf8)}
+.hcard.hc{background:linear-gradient(135deg,#1e3a5f,#4b7bb5)}
+.mini{display:grid;grid-template-columns:1fr;background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);margin-bottom:16px}
+.mini div{padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:8px;border-right:1px solid var(--line)}
+.mini div:last-child{border-right:0}
+.mini span{color:var(--muted);font-size:.8rem;text-transform:uppercase;letter-spacing:.05em}
+.mini b{font-size:1.1rem}
+@media (max-width:640px){
+  .hero{grid-template-columns:1fr 1fr}
+  .hero .hcard,.hero .hcard.h2,.hero .hcard.h3{grid-column:span 1}
+  .hero .hcard.h1{grid-column:1/-1}
+  .hcard b{font-size:1.8rem}
+  .hcard.h1 b{font-size:2.4rem}
+  .mini div{border-right:0;border-bottom:1px solid var(--line)}
+  .mini div:last-child{border-bottom:0}
+}
+@media print{.hcard{break-inside:avoid}.mini{break-inside:avoid;box-shadow:none;border:1px solid #bcd3e6}}
+.ax{fill:var(--muted);font-size:11px}
+.vl{fill:var(--text);font-size:11px;font-weight:700}
+.gl{stroke:var(--line);stroke-width:1}
+.cn{fill:var(--text);font-size:12.5px;font-weight:700}
+.lgt{fill:var(--text);font-size:12px}
+.lgi{cursor:pointer}
+.lgi rect.hit{fill:transparent}
+.dtx{fill:var(--text);font-size:5px;font-weight:800}
+.dts{fill:var(--muted);font-size:2.6px}
+#cchart rect.bar{transition:opacity .2s}
+#cchart rect.bar:hover{opacity:.8}
+/* compact cigarette page */
+#cig .banner{padding:9px 12px;font-size:1rem;margin-bottom:10px;border-radius:12px}
+#cig .hero{gap:8px;margin-bottom:8px}
+#cig .hcard{padding:11px 14px;border-radius:12px}
+#cig .hcard b{font-size:1.45rem;line-height:1.1}
+#cig .hcard .hl{font-size:.66rem}
+#cig .hcard .hs{font-size:.7rem}
+#cig .hcard::after{width:64px;height:64px;right:-20px;top:-20px}
+#cig .mini{margin-bottom:10px;border-radius:12px}
+#cig .mini div{padding:7px 14px}
+#cig .mini span{font-size:.68rem}
+#cig .mini b{font-size:.85rem}
+#cig .card{padding:11px 12px;border-radius:12px}
+#cig .card h2{font-size:.85rem;margin-bottom:6px}
+#cig .two{gap:10px;margin-bottom:10px}
+#cig .two>.card .donut-wrap{gap:8px}
+#cig .two>.card .donut-wrap svg{width:min(140px,100%)}
+#cig .legend{font-size:.72rem;gap:4px}
+#cig .legend i{width:10px;height:10px}
+#cig #cashBars>div{margin-bottom:6px!important;font-size:.8rem}
+#cig .bar-row{padding:2px 0;gap:6px}
+#cig .bar-row .n,#cig .bar-row .v{font-size:.72rem}
+#cig .bar-row .t{height:9px}
+#cig .pill{font-size:.68rem;padding:1px 6px}
+#cig .note{font-size:.68rem;margin-top:6px}
+table.compact{width:100%;border-collapse:collapse}
+table.compact th,table.compact td{padding:5px 6px;font-size:.74rem;white-space:normal}
+table.compact th{font-size:.64rem;cursor:default}
+#cig .tablewrap{max-height:none;overflow:visible}
+@media (max-width:640px){
+  #cig .hcard b{font-size:1.25rem}
+  #cig .hero .hcard.h1 b{font-size:1.6rem}
+  #cig .hcard{padding:9px 11px}
+  #cig .mini div{flex-direction:row}
+  table.compact th,table.compact td{padding:4px 3px;font-size:.68rem}
+  table.compact th{font-size:.58rem}
+}
+.pdf-h{display:none}
+@media print{
+  .pdf-h{display:block;font-size:17px;font-weight:800;color:#03385c;margin:0 0 10px;padding:0 0 6px;border-bottom:3px solid #0284c7}
+  #cig{break-before:page;page-break-before:always}
+  #overview{break-after:auto}
+  #cig .banner,#cig .hero,#cig .mini,#cig .two{break-inside:avoid}
+}
+@media (max-width:900px){.two{grid-template-columns:1fr}}
+@media (max-width:640px){
+  body{font-size:14.5px;padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom))}
+  .wrap{padding:0 12px}
+  nav.tabs{position:fixed;left:0;right:0;bottom:0;margin:0;max-width:none;padding:6px 8px calc(6px + env(safe-area-inset-bottom));background:var(--card);border-top:1px solid var(--line);z-index:20;gap:4px}
+  nav.tabs button{flex:1;border-radius:12px;border:0;box-shadow:none;padding:0 4px;font-size:.82rem}
+  main{margin-top:12px}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .kpi .val{font-size:1.2rem}
+  .bar-row{grid-template-columns:96px 1fr 62px;gap:6px}
+  .bar-row .n{font-size:.78rem}.bar-row .v{font-size:.75rem}
+  .toolbar select,.toolbar .btn{flex:1 1 45%}
+  table.resp thead{display:none}
+  table.resp,table.resp tbody,table.resp tr,table.resp td,table.resp tfoot{display:block;width:100%}
+  table.resp tr{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin-bottom:10px}
+  table.resp td{display:flex;justify-content:space-between;gap:10px;border:0;padding:5px 0;text-align:right}
+  table.resp td::before{content:attr(data-l);color:var(--muted);font-size:.78rem;text-align:left}
+  table.resp td:first-child{font-weight:700;font-size:1rem;border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:4px}
+  table.resp td:first-child::before{content:""}
+  table.resp tfoot tr{background:rgba(2,132,199,.12)}
+}
+@media (min-width:641px){.tablewrap{overflow:auto;max-height:640px}}
+
+/* ---------- uploader (new) ---------- */
+#uploader{padding-top:6px;padding-bottom:40px}
+#uploader .card{margin-bottom:14px}
+.frow{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.frow label,.lbl{font-size:.78rem;color:var(--muted);display:block;margin-bottom:4px}
+.drop{border:2px dashed var(--pri2);border-radius:14px;padding:30px 16px;text-align:center;color:var(--muted);cursor:pointer;transition:.15s;background:rgba(2,132,199,.04)}
+.drop.over{border-color:var(--pri);background:rgba(2,132,199,.12)}
+.drop b{color:var(--text)}
+.thumbs{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.thumb{position:relative;width:110px;height:110px;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb button{position:absolute;top:3px;right:3px;border:0;background:#000a;color:#fff;border-radius:50%;width:24px;height:24px;cursor:pointer}
+.createbtn{width:100%;min-height:54px;font-size:1.1rem;border-radius:14px}
+.status{font-size:.88rem;color:var(--muted);margin-top:10px;text-align:center;min-height:1.2em}
+.status.err{color:var(--bad)}
+.pbar{height:6px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:8px;display:none}
+.pbar i{display:block;height:100%;width:0;background:var(--pri);transition:width .25s}
+details summary{cursor:pointer;font-weight:600;font-size:.9rem}
+.hint{font-size:.78rem;color:var(--muted);margin-top:6px}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100;display:none;align-items:center;justify-content:center;padding:16px}
+#modal.show{display:flex}
+#modal .box{background:var(--card);border-radius:14px;padding:16px;width:min(760px,100%);max-height:90vh;display:flex;flex-direction:column;gap:10px}
+#modal textarea{width:100%;flex:1;min-height:50vh;border:1px solid var(--line);border-radius:10px;padding:10px;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;background:var(--bg);resize:vertical}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div>
+      <h1>Department Sales Dashboard</h1>
+      <p id="hsub">Upload screenshots to create the daily report</p>
+    </div>
+    <div class="hbtns">
+      <button class="icon-btn pdf-btn hide" id="newBtn" title="Start a new report">＋ New</button>
+      <button class="icon-btn pdf-btn hide" id="editBtn" title="Correct any figure">✎ Edit</button>
+      <button class="icon-btn pdf-btn hide" id="pdf" aria-label="Download report as PDF" title="Download report as PDF">⬇ PDF</button>
+      <button class="icon-btn" id="theme" aria-label="Toggle dark mode">🌙</button>
+    </div>
+  </div>
+</header>
+<div class="print-meta">Report generated: <span id="gen"></span></div>
+
+<!-- ================= UPLOAD SCREEN ================= -->
+<div id="uploader" class="wrap" style="margin-top:16px">
+  <div class="card">
+    <div class="frow">
+      <div><label for="store">Store name</label><input type="text" id="store" placeholder="e.g. City Supermarket"></div>
+      <div><label for="rdate">Report date</label><input type="date" id="rdate"></div>
+      <div><label for="tsale">Total sale of the day (optional)</label><input type="text" id="tsale" inputmode="decimal" placeholder="e.g. 21101.31"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="drop" id="drop">
+      <div style="font-size:32px">📤</div>
+      <div><b>Click to upload</b>, drag &amp; drop, or paste (Ctrl+V) your screenshots</div>
+      <div class="hint">Department sales report · Cigarette day-wise summary — upload both together</div>
+      <input type="file" id="file" accept="image/*" multiple hidden>
+    </div>
+    <div class="thumbs" id="thumbs"></div>
+  </div>
+
+  <div class="card">
+    <details>
+      <summary>⚙️ Reading method</summary>
+      <div class="frow" style="margin-top:12px">
+        <div>
+          <label for="mode">How should the screenshots be read?</label>
+          <select id="mode">
+            <option value="ai">Claude AI — accurate (needs API key)</option>
+            <option value="ocr">Free OCR in browser (check figures after)</option>
+          </select>
+        </div>
+        <div id="keyBox">
+          <label for="key">Anthropic API key</label>
+          <input type="password" id="key" placeholder="sk-ant-...">
+        </div>
+      </div>
+      <div class="hint">The key is stored only in this browser. In AI mode the images are sent to Anthropic for reading. OCR needs internet once to load its engine; after creating the report use <b>✎ Edit</b> to correct any misread figure.</div>
+    </details>
+  </div>
+
+  <button class="btn pri createbtn" id="go" disabled>Create Report</button>
+  <div class="pbar" id="pbar"><i id="pbarI"></i></div>
+  <div class="status" id="status"></div>
+</div>
+
+<!-- ================= DASHBOARD (same format) ================= -->
+<nav class="tabs hide" id="tabs">
+  <button class="active" data-v="overview">Overview</button>
+  <button data-v="depts">Departments</button>
+  <button data-v="cig">Cigarettes</button>
+</nav>
+
+<main class="wrap hide" id="dash">
+
+<section class="view active" id="overview">
+  <h2 class="pdf-h">Department Sales Report</h2>
+  <div class="grid kpis" id="kpis"></div>
+  <div class="grid two">
+    <div class="card">
+      <h2>Departments by <span id="mlabel"></span></h2>
+      <div class="seg" id="metricSeg" style="margin-bottom:10px"></div>
+      <div id="bars"></div>
+      <div class="detail" id="detail"></div>
+    </div>
+    <div class="card">
+      <h2>Share by <span id="mlabel2"></span></h2>
+      <div class="donut-wrap"><svg viewBox="0 0 42 42" id="donut"></svg><div class="legend" id="legend"></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="view" id="depts">
+  <div class="card">
+    <div class="toolbar">
+      <input type="search" id="q" placeholder="Search department…" aria-label="Search department">
+      <select id="sortSel" aria-label="Sort by" style="width:auto"></select>
+      <button class="btn" id="dirBtn">↓ High–Low</button>
+      <label class="btn" style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="hideZero"> Hide zero profit</label>
+      <button class="btn pri" id="csv">Export CSV</button>
+    </div>
+    <div class="tablewrap">
+      <table class="resp" id="deptTable">
+        <thead><tr id="deptHead"></tr></thead>
+        <tbody id="deptBody"></tbody>
+        <tfoot id="deptFoot"></tfoot>
+      </table>
+    </div>
+    <p class="note" id="dnote"></p>
+  </div>
+</section>
+
+<section class="view" id="cig">
+  <h2 class="pdf-h">Cigarette Sales Report</h2>
+  <div class="banner" id="banner"></div>
+  <div id="ckpis"></div>
+  <div class="grid two">
+    <div class="card">
+      <h2>Cost vs Sale vs Profit</h2>
+      <svg id="cchart" viewBox="0 0 420 220" role="img" aria-label="Grouped bar chart of cost, sale and profit by cashier" style="width:100%;height:auto;display:block"></svg>
+    </div>
+    <div class="card">
+      <h2>Share of sale</h2>
+      <div class="donut-wrap"><svg viewBox="0 0 42 42" id="cdonut"></svg><div class="legend" id="clegend"></div></div>
+    </div>
+  </div>
+  <div class="grid two">
+  <div class="card">
+    <h2 id="cigTitle">Day wise summary</h2>
+    <div class="tablewrap">
+      <table class="compact" id="cashTable">
+        <thead><tr><th>Date</th><th>Cashier</th><th>Qty</th><th>Cost</th><th>Sale</th><th>Profit</th><th>Profit %</th></tr></thead>
+        <tbody id="cashBody"></tbody>
+        <tfoot id="cashFoot"></tfoot>
+      </table>
+    </div>
+    <p class="note" id="cigNote"></p>
+  </div>
+  <div class="card">
+    <h2>Cashier performance</h2>
+    <div id="cashBars"></div>
+  </div>
+  </div>
+</section>
+
+</main>
+
+<div id="modal">
+  <div class="box">
+    <b>Edit report data</b>
+    <div class="hint">Correct any figure below (JSON), then press Apply. Numbers must stay plain numbers.</div>
+    <textarea id="jsonBox" spellcheck="false"></textarea>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn" id="mCancel">Cancel</button>
+      <button class="btn pri" id="mApply">Apply</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script>
+/* ---------- DATA (filled from screenshots) ---------- */
+let DEPTS=[], GRAND={qty:0,amount:0,discount:0,tax:0,net:0,profit:0};
+let CASH=[], CASH_TOTAL={qty:0,cost:0,sale:0,profit:0,pct:0}, TOTAL_SALE=null;
+let DATA=null;
+
+const METRICS=[
+ {k:"amount",l:"Amount",money:true},{k:"net",l:"Net Total",money:true},
+ {k:"profit",l:"Profit",money:true},{k:"qty",l:"Quantity",money:false},
+ {k:"tax",l:"Tax",money:true},{k:"discount",l:"Discount",money:true}
+];
+const ICONS={amount:"◉",net:"∑",profit:"▲",qty:"▦",tax:"%",discount:"−"};
+const COLS=[["name","Department"],["qty","Quantity"],["amount","Amount"],["discount","Discount"],["tax","Tax"],["net","Net Total"],["profit","Profit"],["margin","Margin %"]];
+const COLORS=["#0284c7","#06b6d4","#14b8a6","#f59e0b","#6366f1","#38bdf8","#fb7185","#94a3b8"];
+
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const f2=n=>n.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+const fq=n=>Number.isInteger(n)?n.toLocaleString("en-US")+".000":n.toLocaleString("en-US",{minimumFractionDigits:3});
+const fmt=(k,v)=>k==="qty"?fq(v):f2(v);
+const pill=m=>`<span class="pill ${m>=15?"g":m>=5?"w":"b"}">${m.toFixed(1)}%</span>`;
+const n0=n=>n.toLocaleString("en-US");
+const num=v=>{const n=parseFloat(String(v??"").replace(/,/g,""));return isNaN(n)?0:n};
+const sumOf=(a,k)=>a.reduce((s,x)=>s+x[k],0);
+const r3=n=>Math.round(n*1000)/1000;
+
+let metric="amount",selDept=null,sortKey="net",desc=true;
+
+/* ---------- tabs ---------- */
+function showTab(id){
+  document.querySelectorAll("#tabs button").forEach(x=>x.classList.toggle("active",x.dataset.v===id));
+  document.querySelectorAll("section.view").forEach(s=>s.classList.toggle("active",s.id===id));
+}
+document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{showTab(b.dataset.v);window.scrollTo({top:0,behavior:"smooth"})});
+
+/* ---------- theme ---------- */
+const root=document.documentElement;
+function setTheme(t){root.dataset.theme=t;$("#theme").textContent=t==="dark"?"☀️":"🌙";try{localStorage.setItem("th",t)}catch(e){}}
+let saved=null;try{saved=localStorage.getItem("th")}catch(e){}
+setTheme(saved||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light"));
+$("#theme").onclick=()=>setTheme(root.dataset.theme==="dark"?"light":"dark");
+
+/* ---------- overview ---------- */
+function renderKPIs(){
+  $("#kpis").innerHTML=[
+   ["Amount",f2(GRAND.amount),"Gross before tax"],
+   ["Net Total",f2(GRAND.net),"After tax"],
+   ["Profit",f2(GRAND.profit),"Dept report"],
+   ["Quantity",fq(GRAND.qty),"Units sold"],
+   ["Tax",f2(GRAND.tax),"Total tax"],
+   ["Discount",f2(GRAND.discount),"Total discount"]
+  ].map(k=>`<div class="card kpi"><div class="label">${k[0]}</div><div class="val">${k[1]}</div><div class="sub">${k[2]}</div></div>`).join("");
+}
+function renderMetricSeg(){
+  $("#metricSeg").innerHTML=METRICS.map(m=>`<button class="${m.k===metric?"on":""}" data-k="${m.k}" aria-pressed="${m.k===metric}"><span class="ic">${ICONS[m.k]}</span>${m.l}</button>`).join("");
+  $("#metricSeg").querySelectorAll("button").forEach(b=>b.onclick=()=>{metric=b.dataset.k;selDept=null;renderOverview()});
+}
+function renderOverview(){
+  renderMetricSeg();
+  const m=METRICS.find(x=>x.k===metric);
+  $("#mlabel").textContent=m.l;$("#mlabel2").textContent=m.l;
+  const list=[...DEPTS].sort((a,b)=>b[metric]-a[metric]);
+  const max=Math.max(1e-9,...list.map(d=>d[metric]));
+  $("#bars").innerHTML=list.map(d=>`<div class="bar-row ${d.name===selDept?"sel":""}" data-n="${esc(d.name)}"><div class="n" title="${esc(d.name)}">${esc(d.name)}</div><div class="t"><div class="f" style="width:${Math.max(0,d[metric])/max*100}%"></div></div><div class="v">${fmt(metric,d[metric])}</div></div>`).join("");
+  $("#bars").querySelectorAll(".bar-row").forEach(r=>r.onclick=()=>{selDept=selDept===r.dataset.n?null:r.dataset.n;renderOverview()});
+  const det=$("#detail");
+  if(selDept){
+    const d=DEPTS.find(x=>x.name===selDept);
+    det.className="detail show";
+    det.innerHTML=`<b>${esc(d.name)}</b><br>Qty ${fq(d.qty)} · Amount ${f2(d.amount)} · Tax ${f2(d.tax)} · Discount ${f2(d.discount)}<br>Net ${f2(d.net)} · Profit ${f2(d.profit)} · Margin ${pill(d.margin)}`;
+  } else det.className="detail";
+  const top=list.slice(0,7),rest=list.slice(7).reduce((s,d)=>s+d[metric],0);
+  const parts=top.map(d=>({n:d.name,v:Math.max(0,d[metric])}));
+  if(rest>0)parts.push({n:"Others",v:rest});
+  const tot=parts.reduce((s,p)=>s+p.v,0)||1;
+  let off=25,svg=`<circle cx="21" cy="21" r="15.9155" fill="none" stroke="var(--line)" stroke-width="6"/>`;
+  parts.forEach((p,i)=>{const pc=p.v/tot*100;svg+=`<circle cx="21" cy="21" r="15.9155" fill="none" stroke="${COLORS[i]}" stroke-width="6" stroke-dasharray="${pc} ${100-pc}" stroke-dashoffset="${off}"><title>${esc(p.n)}: ${pc.toFixed(1)}%</title></circle>`;off-=pc});
+  $("#donut").innerHTML=svg;
+  $("#legend").innerHTML=parts.map((p,i)=>`<div><i style="background:${COLORS[i]}"></i><span>${esc(p.n)}</span><span>${(p.v/tot*100).toFixed(1)}%</span></div>`).join("");
+}
+
+/* ---------- departments table ---------- */
+$("#sortSel").innerHTML=COLS.map(c=>`<option value="${c[0]}" ${c[0]===sortKey?"selected":""}>Sort: ${c[1]}</option>`).join("");
+$("#deptHead").innerHTML=COLS.map(c=>`<th data-k="${c[0]}">${c[1]}</th>`).join("");
+$("#deptHead").querySelectorAll("th").forEach(th=>th.onclick=()=>{
+  if(sortKey===th.dataset.k)desc=!desc;else{sortKey=th.dataset.k;desc=th.dataset.k!=="name"}
+  $("#sortSel").value=sortKey;renderDepts();
+});
+$("#sortSel").onchange=e=>{sortKey=e.target.value;desc=sortKey!=="name";renderDepts()};
+$("#dirBtn").onclick=()=>{desc=!desc;renderDepts()};
+$("#q").oninput=()=>renderDepts();$("#hideZero").onchange=()=>renderDepts();
+
+function filtered(){
+  const q=$("#q").value.trim().toLowerCase();
+  let l=DEPTS.filter(d=>d.name.toLowerCase().includes(q)&&(!$("#hideZero").checked||d.profit>0));
+  l.sort((a,b)=>sortKey==="name"?a.name.localeCompare(b.name)*(desc?-1:1):(a[sortKey]-b[sortKey])*(desc?-1:1));
+  return l;
+}
+function renderDepts(){
+  $("#dirBtn").textContent=desc?"↓ High–Low":"↑ Low–High";
+  $("#deptHead").querySelectorAll("th").forEach(th=>{th.classList.toggle("sorted",th.dataset.k===sortKey);th.classList.toggle("desc",th.dataset.k===sortKey&&desc)});
+  const l=filtered();
+  $("#deptBody").innerHTML=l.length?l.map(d=>`<tr>
+   <td data-l="Department">${esc(d.name)}</td><td data-l="Quantity">${fq(d.qty)}</td><td data-l="Amount">${f2(d.amount)}</td>
+   <td data-l="Discount">${f2(d.discount)}</td><td data-l="Tax">${f2(d.tax)}</td><td data-l="Net Total">${f2(d.net)}</td>
+   <td data-l="Profit">${f2(d.profit)}</td><td data-l="Margin %">${pill(d.margin)}</td></tr>`).join(""):`<tr><td class="empty" colspan="8">No departments match.</td></tr>`;
+  const g=GRAND;
+  $("#deptFoot").innerHTML=`<tr><td data-l="">Grand Total</td><td data-l="Quantity">${fq(g.qty)}</td><td data-l="Amount">${f2(g.amount)}</td><td data-l="Discount">${f2(g.discount)}</td><td data-l="Tax">${f2(g.tax)}</td><td data-l="Net Total">${f2(g.net)}</td><td data-l="Profit">${f2(g.profit)}</td><td data-l="Margin %">${pill(g.net?g.profit/g.net*100:0)}</td></tr>`;
+  $("#dnote").textContent=`Showing ${l.length} of ${DEPTS.length} departments. Grand Total row is as reported in the source report.`;
+}
+$("#csv").onclick=()=>{
+  const rows=[COLS.map(c=>c[1])].concat(filtered().map(d=>COLS.map(c=>c[0]==="margin"?d.margin.toFixed(2):d[c[0]])));
+  const blob=new Blob([rows.map(r=>r.map(v=>`"${v}"`).join(",")).join("\n")],{type:"text/csv"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="departments.csv";a.click();
+};
+
+/* ---------- Cigarette sales ---------- */
+function renderCig(){
+  if(TOTAL_SALE!=null){$("#banner").classList.remove("hide");$("#banner").textContent="Total Sale - "+f2(TOTAL_SALE)}
+  else $("#banner").classList.add("hide");
+  const names=[...new Set(CASH.filter(c=>c.sale>0).map(c=>c.cashier))];
+  $("#cigTitle").textContent="Day wise summary"+(CASH[0]&&CASH[0].date?" · "+CASH[0].date:"");
+  $("#ckpis").innerHTML=`
+   <div class="hero">
+     <div class="hcard hq"><span class="hl">Quantity</span><b>${n0(CASH_TOTAL.qty)}</b><span class="hs">Cigarette units sold</span></div>
+     <div class="hcard hc"><span class="hl">Cost</span><b>${n0(CASH_TOTAL.cost)}</b><span class="hs">Total purchase cost</span></div>
+     <div class="hcard h1"><span class="hl">Sale</span><b>${n0(CASH_TOTAL.sale)}</b><span class="hs">Cigarette sales</span></div>
+     <div class="hcard h2"><span class="hl">Profit</span><b>${f2(CASH_TOTAL.profit)}</b><span class="hs">Earned on sales</span></div>
+     <div class="hcard h3"><span class="hl">Margin</span><b>${CASH_TOTAL.pct.toFixed(2)}%</b><span class="hs">Profit on sale</span></div>
+   </div>
+   <div class="mini">
+     <div><span>Cashiers</span><b>${esc(names.join(" · ")||"—")}</b></div>
+   </div>`;
+  const act=CASH.filter(c=>c.sale>0),max=Math.max(1e-9,...act.map(c=>c.sale));
+  $("#cashBars").innerHTML=act.map(c=>`<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;align-items:center;font-weight:600;margin-bottom:2px"><span>${esc(c.cashier)}</span><span>${pill(c.pct)}</span></div>`+
+   [["Sale",c.sale,""],["Cost",c.cost,"background:var(--muted)"],["Profit",c.profit,"background:var(--good)"]].map(([l,v,st])=>`<div class="bar-row" style="cursor:default;grid-template-columns:60px 1fr 70px"><div class="n">${l}</div><div class="t"><div class="f" style="width:${Math.max(0,v)/max*100}%;${st}"></div></div><div class="v">${f2(v)}</div></div>`).join("")+`</div>`).join("");
+  $("#cashBody").innerHTML=CASH.map(c=>`<tr><td data-l="Date">${esc(c.date)}</td><td data-l="Cashier">${esc(c.cashier)}</td><td data-l="Qty">${n0(c.qty)}</td><td data-l="Cost">${n0(c.cost)}</td><td data-l="Sale">${n0(c.sale)}</td><td data-l="Profit">${f2(c.profit)}</td><td data-l="Profit %">${c.pct.toFixed(2)}%</td></tr>`).join("");
+  const t=CASH_TOTAL;
+  $("#cashFoot").innerHTML=`<tr><td data-l="">Total</td><td data-l=""></td><td data-l="Qty">${n0(t.qty)}</td><td data-l="Cost">${n0(t.cost)}</td><td data-l="Sale">${n0(t.sale)}</td><td data-l="Profit">${f2(t.profit)}</td><td data-l="Profit %">${t.pct.toFixed(2)}%</td></tr>`;
+  const zero=[...new Set(CASH.filter(c=>!(c.sale>0)).map(c=>c.cashier))];
+  $("#cigNote").textContent=zero.length?`Cashier "${zero.join('", "')}" rows show zero sales, as in the source report.`:"";
+}
+const CSER=[{k:"cost",l:"Cost",c:"#4b7bb5"},{k:"sale",l:"Sale",c:"#0284c7"},{k:"profit",l:"Profit",c:"#14b8a6"}];
+let cHidden={};
+function toggleSer(k){cHidden[k]=!cHidden[k];renderCigChart()}
+function renderCigChart(){
+  const act=CASH.filter(c=>c.sale>0);
+  const vis=CSER.filter(x=>!cHidden[x.k]);
+  const W=420,H=220,L=46,R=8,T=38,B=28,pw=W-L-R,ph=H-T-B;
+  const mx=Math.max(1,...act.flatMap(c=>vis.map(x=>c[x.k])));
+  const step=Math.pow(10,Math.floor(Math.log10(mx)));
+  const top=Math.ceil(mx*1.05/step)*step;
+  let g="";
+  CSER.forEach((x,i)=>{
+    g+=`<g class="lgi" transform="translate(${L+i*88},8)" onclick="toggleSer('${x.k}')" style="opacity:${cHidden[x.k]?.35:1}"><rect class="hit" x="-4" y="-4" width="84" height="26"/><rect width="12" height="12" rx="3" y="2" fill="${x.c}"/><text class="lgt" x="18" y="12">${x.l}</text></g>`;
+  });
+  for(let i=0;i<=4;i++){
+    const v=top*i/4,y=T+ph-ph*i/4;
+    g+=`<line class="gl" x1="${L}" x2="${W-R}" y1="${y}" y2="${y}"/><text class="ax" x="${L-6}" y="${y+4}" text-anchor="end">${n0(Math.round(v))}</text>`;
+  }
+  const gw=pw/Math.max(act.length,1),gap=6;
+  const bw=Math.max(4,Math.min(42,(gw-28)/Math.max(vis.length,1)-gap));
+  const gbw=vis.length*bw+(vis.length-1)*gap;
+  act.forEach((c,gi)=>{
+    const x0=L+gi*gw+(gw-gbw)/2;
+    vis.forEach((x,si)=>{
+      const v=c[x.k],h=Math.max(0,v)/top*ph,bx=x0+si*(bw+gap),by=T+ph-h;
+      g+=`<rect class="bar" x="${bx}" y="${by}" width="${bw}" height="${h}" rx="4" fill="${x.c}"><title>${esc(c.cashier)} · ${x.l}: ${x.k==="profit"?f2(v):n0(v)}</title></rect>`;
+      g+=`<text class="vl" x="${bx+bw/2}" y="${by-5}" text-anchor="middle">${n0(v)}</text>`;
+    });
+    g+=`<text class="cn" x="${L+gi*gw+gw/2}" y="${H-10}" text-anchor="middle">${esc(c.cashier)}</text>`;
+  });
+  $("#cchart").innerHTML=g;
+  const tot=act.reduce((a,c)=>a+c.sale,0)||1,cols=COLORS;
+  let off=25,d=`<circle cx="21" cy="21" r="15.9155" fill="none" stroke="var(--line)" stroke-width="6"/>`;
+  act.forEach((c,i)=>{const pc=c.sale/tot*100;d+=`<circle cx="21" cy="21" r="15.9155" fill="none" stroke="${cols[i%cols.length]}" stroke-width="6" stroke-dasharray="${pc} ${100-pc}" stroke-dashoffset="${off}"><title>${esc(c.cashier)}: ${pc.toFixed(1)}%</title></circle>`;off-=pc});
+  d+=`<text class="dtx" x="21" y="21.5" text-anchor="middle">${n0(tot)}</text><text class="dts" x="21" y="26" text-anchor="middle">TOTAL SALE</text>`;
+  $("#cdonut").innerHTML=d;
+  $("#clegend").innerHTML=act.map((c,i)=>`<div><i style="background:${cols[i%cols.length]}"></i><span>${esc(c.cashier)}</span><span>${(c.sale/tot*100).toFixed(1)}% · ${n0(c.sale)}</span></div>`).join("");
+}
+
+/* ---------- PDF ---------- */
+let _theme=null,_title=document.title;
+window.addEventListener("beforeprint",()=>{
+  _theme=root.dataset.theme;root.dataset.theme="light";
+  const d=new Date();
+  $("#gen").textContent=d.toLocaleString();
+  document.title="Department_Sales_Report_"+($("#rdate").value||d.toISOString().slice(0,10));
+});
+window.addEventListener("afterprint",()=>{
+  if(_theme)root.dataset.theme=_theme;
+  document.title=_title;
+});
+$("#pdf").onclick=()=>{renderAll();setTimeout(()=>window.print(),50)};
+
+/* ================= APPLY DATA → DASHBOARD ================= */
+function renderAll(){renderKPIs();renderOverview();renderDepts();renderCig();renderCigChart()}
+
+function applyData(D){
+  DEPTS=(D.departments||[]).map(r=>({name:String(r.name||"").trim(),qty:num(r.qty),amount:num(r.amount),discount:num(r.discount),tax:num(r.tax),net:num(r.net),profit:num(r.profit)})).filter(r=>r.name);
+  DEPTS.forEach(d=>d.margin=d.net?d.profit/d.net*100:0);
+  const gt=D.departments_total||{};
+  GRAND={qty:num(gt.qty),amount:num(gt.amount),discount:num(gt.discount),tax:num(gt.tax),net:num(gt.net),profit:num(gt.profit)};
+  if(!GRAND.net&&!GRAND.amount&&DEPTS.length){
+    GRAND={qty:r3(sumOf(DEPTS,"qty")),amount:+sumOf(DEPTS,"amount").toFixed(2),discount:+sumOf(DEPTS,"discount").toFixed(2),tax:+sumOf(DEPTS,"tax").toFixed(2),net:+sumOf(DEPTS,"net").toFixed(2),profit:+sumOf(DEPTS,"profit").toFixed(2)};
+  }
+  const cg=D.cigarette||{};
+  CASH=(cg.rows||[]).map(r=>{const o={date:String(r.date||""),cashier:String(r.cashier||"").trim(),qty:num(r.qty),cost:num(r.cost),sale:num(r.sale),profit:num(r.profit),pct:num(r.pct)};
+    if(!o.pct&&o.sale)o.pct=o.profit/o.sale*100;return o});
+  const ct=cg.total||{};
+  CASH_TOTAL={qty:num(ct.qty),cost:num(ct.cost),sale:num(ct.sale),profit:num(ct.profit),pct:num(ct.pct)};
+  if(!CASH_TOTAL.sale&&CASH.length){
+    CASH_TOTAL={qty:sumOf(CASH,"qty"),cost:sumOf(CASH,"cost"),sale:sumOf(CASH,"sale"),profit:sumOf(CASH,"profit"),pct:0};
+  }
+  if(!CASH_TOTAL.pct&&CASH_TOTAL.sale)CASH_TOTAL.pct=CASH_TOTAL.profit/CASH_TOTAL.sale*100;
+  CASH_TOTAL.pct=+CASH_TOTAL.pct.toFixed(2);
+  const ts=D.total_sale;
+  TOTAL_SALE=(ts===null||ts===undefined||ts==="")?null:num(ts);
+  if(!TOTAL_SALE)TOTAL_SALE=null;
+  DATA={departments:DEPTS.map(({margin,...r})=>r),departments_total:GRAND,cigarette:{rows:CASH,total:CASH_TOTAL},total_sale:TOTAL_SALE};
+
+  const hasD=DEPTS.length>0,hasC=CASH.length>0;
+  const tab=v=>document.querySelector(`#tabs button[data-v="${v}"]`);
+  tab("overview").classList.toggle("hide",!hasD);
+  tab("depts").classList.toggle("hide",!hasD);
+  tab("cig").classList.toggle("hide",!hasC);
+  $("#overview").classList.toggle("hide",!hasD);
+  $("#depts").classList.toggle("hide",!hasD);
+  $("#cig").classList.toggle("hide",!hasC);
+  metric="amount";selDept=null;
+  renderAll();
+  const store=$("#store").value.trim(),dt=$("#rdate").value;
+  $("#hsub").textContent=[store,"Sales summary by department",dt].filter(Boolean).join(" · ");
+  showTab(hasD?"overview":"cig");
+  $("#uploader").classList.add("hide");
+  ["#tabs","#dash","#newBtn","#editBtn","#pdf"].forEach(s=>$(s).classList.remove("hide"));
+  window.scrollTo({top:0});
+}
+
+/* ================= UPLOAD ================= */
+let images=[];
+$("#rdate").value=new Date().toISOString().slice(0,10);
+["store","mode","key"].forEach(k=>{
+  try{const v=localStorage.getItem("dr2_"+k);if(v)$("#"+k).value=v}catch(e){}
+  $("#"+k).addEventListener("input",()=>{try{localStorage.setItem("dr2_"+k,$("#"+k).value)}catch(e){}});
+});
+const syncMode=()=>$("#keyBox").style.display=$("#mode").value==="ai"?"block":"none";
+$("#mode").addEventListener("change",syncMode);syncMode();
+
+const drop=$("#drop");
+drop.onclick=()=>$("#file").click();
+$("#file").onchange=e=>{addFiles(e.target.files);e.target.value=""};
+["dragenter","dragover"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("over")}));
+["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("over")}));
+drop.addEventListener("drop",e=>addFiles(e.dataTransfer.files));
+document.addEventListener("paste",e=>{const f=[...(e.clipboardData?.files||[])].filter(x=>x.type.startsWith("image/"));if(f.length)addFiles(f)});
+function addFiles(list){
+  [...list].filter(f=>f.type.startsWith("image/")).forEach(f=>{
+    const r=new FileReader();
+    r.onload=()=>{images.push({name:f.name||"screenshot",dataUrl:r.result});renderThumbs()};
+    r.readAsDataURL(f);
+  });
+}
+function renderThumbs(){
+  $("#thumbs").innerHTML="";
+  images.forEach((im,i)=>{
+    const d=document.createElement("div");d.className="thumb";
+    d.innerHTML=`<img src="${im.dataUrl}" alt=""><button title="Remove">×</button>`;
+    d.querySelector("button").onclick=()=>{images.splice(i,1);renderThumbs()};
+    $("#thumbs").appendChild(d);
+  });
+  $("#go").disabled=!images.length;
+  setStatus(images.length?images.length+" screenshot(s) ready":"");
+}
+function setStatus(t,err){$("#status").textContent=t;$("#status").classList.toggle("err",!!err)}
+function prog(p,msg){$("#pbar").style.display="block";$("#pbarI").style.width=(p*100)+"%";if(msg)setStatus(msg)}
+
+/* ---------- Claude AI reader ---------- */
+async function runAI(){
+  const key=$("#key").value.trim();
+  if(!key)throw new Error("Enter your Anthropic API key under “Reading method”.");
+  prog(.25,"Claude is reading your screenshots…");
+  const content=images.map(im=>({type:"image",source:{type:"base64",media_type:im.dataUrl.match(/data:(.*?);/)[1],data:im.dataUrl.split(",")[1]}}));
+  content.push({type:"text",text:`These screenshots are supermarket reports. There may be:
+(A) a DEPARTMENT SALES report with columns Department, Quantity, Amount, Discount, Tax, Net Total, Profit, and a Grand Total row;
+(B) a CIGARETTE "Day wise summary" with columns Date, Cashier, Qty, Cost, Sale, Profit, Profit %, and a Total row;
+(C) possibly a total sale figure for the whole day.
+Copy every row EXACTLY as shown (keep department/cashier spelling, keep rows with zero values). Do not calculate or invent numbers. Reply with ONLY this JSON (use null/[] for anything not present):
+{"departments":[{"name":"","qty":0,"amount":0,"discount":0,"tax":0,"net":0,"profit":0}],
+"departments_total":{"qty":0,"amount":0,"discount":0,"tax":0,"net":0,"profit":0},
+"cigarette":{"rows":[{"date":"","cashier":"","qty":0,"cost":0,"sale":0,"profit":0,"pct":0}],"total":{"qty":0,"cost":0,"sale":0,"profit":0,"pct":0}},
+"total_sale":null}`});
+  const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",
+    headers:{"content-type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+    body:JSON.stringify({model:"claude-sonnet-5-5",max_tokens:8000,messages:[{role:"user",content}]})});
+  if(!res.ok)throw new Error("API error "+res.status+": "+(await res.text()).slice(0,200));
+  const j=await res.json(),t=j.content.map(c=>c.text||"").join("");
+  const m=t.match(/\{[\s\S]*\}/);if(!m)throw new Error("Could not understand the AI reply. Try again.");
+  return JSON.parse(m[0]);
+}
+
+/* ---------- OCR reader (row parsing) ---------- */
+const isNum=t=>/^-?[\d,]*\.?\d+$/.test(t.replace(/[%]/g,""));
+function parseOCRText(text){
+  const D={departments:[],departments_total:null,cigarette:{rows:[],total:null},total_sale:null};
+  text.split(/\n+/).map(l=>l.replace(/[|_]/g," ").trim()).filter(Boolean).forEach(line=>{
+    const tk=line.split(/\s+/);
+    let n=0;while(n<tk.length&&isNum(tk[tk.length-1-n]))n++;
+    const nums=tk.slice(tk.length-n).map(num),lead=tk.slice(0,tk.length-n).join(" ");
+    const low=line.toLowerCase();
+    const di=tk.findIndex(t=>/^\d{1,2}[-\/]\d{1,2}[-\/]\d{2,4}$/.test(t));
+    if(di>=0&&tk.length-di-1>=5){ // cigarette row (cashier may be numeric, e.g. 2255)
+      const v=tk.slice(-5).map(num),cashier=tk.slice(di+1,tk.length-5).join(" ");
+      D.cigarette.rows.push({date:tk[di],cashier,qty:v[0],cost:v[1],sale:v[2],profit:v[3],pct:v[4]});return;
+    }
+    if(/total/.test(lead.toLowerCase())&&!/sale\s*-/.test(low)){
+      if(n>=6){const v=nums.slice(-6);D.departments_total={qty:v[0],amount:v[1],discount:v[2],tax:v[3],net:v[4],profit:v[5]};return}
+      if(n===5){const v=nums;D.cigarette.total={qty:v[0],cost:v[1],sale:v[2],profit:v[3],pct:v[4]};return}
+    }
+    if(/total\s*sale/.test(low)&&n>=1){D.total_sale=nums[nums.length-1];return}
+    if(n>=6&&lead.length>=2&&/[a-z]/i.test(lead)){
+      const v=nums.slice(-6);D.departments.push({name:lead,qty:v[0],amount:v[1],discount:v[2],tax:v[3],net:v[4],profit:v[5]});
+    }
+  });
+  return D;
+}
+async function runOCR(){
+  if(typeof Tesseract==="undefined")throw new Error("OCR engine could not load — check your internet connection (needed the first time).");
+  let cur=0;
+  const worker=await Tesseract.createWorker("eng",1,{logger:m=>{if(m.status==="recognizing text")prog((cur+m.progress)/images.length,`Reading screenshot ${cur+1} of ${images.length}…`)}});
+  await worker.setParameters({tessedit_pageseg_mode:"6",preserve_interword_spaces:"1"});
+  let all="";
+  for(let i=0;i<images.length;i++){cur=i;const r=await worker.recognize(images[i].dataUrl);all+="\n"+r.data.text}
+  await worker.terminate();
+  return parseOCRText(all);
+}
+
+/* ---------- Create ---------- */
+$("#go").onclick=async()=>{
+  $("#go").disabled=true;prog(.05,"Starting…");
+  try{
+    const D=$("#mode").value==="ai"?await runAI():await runOCR();
+    const manual=$("#tsale").value.trim();
+    if(manual)D.total_sale=num(manual);
+    if(!(D.departments||[]).length&&!((D.cigarette||{}).rows||[]).length)
+      throw new Error("No department or cigarette rows were found. Try clearer/larger screenshots or use Claude AI mode.");
+    prog(1,"Report ready ✔");
+    applyData(D);
+  }catch(e){setStatus("⚠️ "+e.message,true)}
+  finally{$("#go").disabled=!images.length;setTimeout(()=>$("#pbar").style.display="none",1200)}
+};
+
+/* ---------- New / Edit ---------- */
+$("#newBtn").onclick=()=>{
+  ["#tabs","#dash","#newBtn","#editBtn","#pdf"].forEach(s=>$(s).classList.add("hide"));
+  $("#uploader").classList.remove("hide");$("#hsub").textContent="Upload screenshots to create the daily report";
+  window.scrollTo({top:0});
+};
+$("#editBtn").onclick=()=>{$("#jsonBox").value=JSON.stringify(DATA,null,1);$("#modal").classList.add("show")};
+$("#mCancel").onclick=()=>$("#modal").classList.remove("show");
+$("#mApply").onclick=()=>{
+  try{const D=JSON.parse($("#jsonBox").value);$("#modal").classList.remove("show");applyData(D)}
+  catch(e){alert("That JSON is not valid: "+e.message)}
+};
+</script>
+</body>
+</html>
